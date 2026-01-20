@@ -61,11 +61,11 @@ export default function Command() {
         ...updatedSchedules,
       ]);
 
-      await showToast(Toast.Style.Success, "Caffeination schedule set successfully.");
+      await showToast(Toast.Style.Success, "✅ Caffeination schedule set successfully!");
       setSearchText("");
     } catch (error) {
       console.error("Failed to set schedule:", error);
-      await showToast(Toast.Style.Failure, "Failed to set schedule.");
+      await showToast(Toast.Style.Failure, "❌ Failed to set schedule - please try again");
     }
   };
 
@@ -91,13 +91,13 @@ export default function Command() {
       try {
         if (schedule.IsRunning === true) await stopCaffeinate({ menubar: true, status: true });
         await LocalStorage.removeItem(schedule.day);
-        await showToast(Toast.Style.Success, "Schedule deleted.");
+        await showToast(Toast.Style.Success, "🗑️ Schedule deleted successfully!");
 
         const updatedSchedules = schedules.filter((scheduleItem) => scheduleItem.day !== schedule.day);
         setSchedules(updatedSchedules);
       } catch (error) {
         console.error("Failed to delete schedule:", error);
-        await showToast(Toast.Style.Failure, "Failed to delete schedule.");
+        await showToast(Toast.Style.Failure, "❌ Failed to delete schedule - please try again");
       }
     }
   };
@@ -106,7 +106,7 @@ export default function Command() {
     changeScheduleState("decaffeinate", schedule);
     await showToast(
       Toast.Style.Success,
-      `Schedule for ${schedule.day.charAt(0).toUpperCase() + schedule.day.slice(1).toLowerCase()} is now paused`,
+      `⏸️ Schedule for ${schedule.day.charAt(0).toUpperCase() + schedule.day.slice(1).toLowerCase()} is now paused`,
     );
 
     if (isTodaysSchedule(schedule)) {
@@ -123,7 +123,7 @@ export default function Command() {
     changeScheduleState("caffeinate", schedule);
     await showToast(
       Toast.Style.Success,
-      `Schedule for ${schedule.day.charAt(0).toUpperCase() + schedule.day.slice(1).toLowerCase()} is now resumed`,
+      `▶️ Schedule for ${schedule.day.charAt(0).toUpperCase() + schedule.day.slice(1).toLowerCase()} is now resumed`,
     );
 
     const isScheduled = await checkSchedule();

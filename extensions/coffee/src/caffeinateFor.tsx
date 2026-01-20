@@ -12,7 +12,7 @@ export default async function Command(props: { arguments: Arguments }) {
   const hasValue = hours || minutes || seconds;
 
   if (!hasValue) {
-    await showToast(Toast.Style.Failure, "No values set for caffeinate length");
+    await showToast(Toast.Style.Failure, "⏱️ No values set for caffeinate duration");
     return;
   }
 
@@ -22,16 +22,24 @@ export default async function Command(props: { arguments: Arguments }) {
     (!seconds || (Number.isInteger(Number(seconds)) && Number(seconds) >= 0));
 
   if (!validInput) {
-    await showToast(Toast.Style.Failure, "Please ensure all arguments are whole numbers");
+    await showToast(Toast.Style.Failure, "🔢 Please ensure all arguments are whole numbers");
     return;
   }
 
   const totalSeconds = Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
   const formattedTime = `${hours ? `${hours}h` : ""}${minutes ? `${minutes}m` : ""}${seconds ? `${seconds}s` : ""}`;
 
+  const caffeinationInfo = {
+    type: "timed" as const,
+    startTime: Date.now(),
+    endTime: Date.now() + totalSeconds * 1000,
+    duration: totalSeconds,
+  };
+
   await startCaffeinate(
     { menubar: true, status: true },
-    `Caffeinating your Mac for ${formattedTime}`,
+    `☕ Caffeinating your computer for ${formattedTime}`,
     `-t ${totalSeconds}`,
+    caffeinationInfo
   );
 }

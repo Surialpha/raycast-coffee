@@ -6,7 +6,7 @@ export default async function Command(props: { arguments: Arguments.CaffeinateUn
   const pattern = /^(\d{1,2})(?::(\d\d))? *(am|pm)?$/i;
 
   if (!pattern.test(time)) {
-    await showToast(Toast.Style.Failure, "Unrecognized time format");
+    await showToast(Toast.Style.Failure, "⏰ Unrecognized time format - use HH:MM or H:MM AM/PM");
     return;
   }
 
@@ -18,7 +18,7 @@ export default async function Command(props: { arguments: Arguments.CaffeinateUn
   const minute = minuteStr ? Number(minuteStr) : 0;
 
   if (hour < 0 || hour > 24 || minute < 0 || minute > 59) {
-    await showToast(Toast.Style.Failure, "Unrecognized time format");
+    await showToast(Toast.Style.Failure, "⏰ Invalid time - please use HH:MM or H:MM AM/PM");
     return;
   }
 
@@ -39,9 +39,17 @@ export default async function Command(props: { arguments: Arguments.CaffeinateUn
   const formattedTime = target.toLocaleTimeString([], { timeStyle: "short" });
   const tomorrow = target.getDate() != now.getDate() ? "tomorrow at " : "";
 
+  const caffeinationInfo = {
+    type: "until" as const,
+    startTime: Date.now(),
+    endTime: target.getTime(),
+    duration: totalSeconds,
+  };
+
   await startCaffeinate(
     { menubar: true, status: true },
-    `Caffeinating your Mac until ${tomorrow}${formattedTime}`,
+    `⏰ Caffeinating your computer until ${tomorrow}${formattedTime}`,
     `-t ${totalSeconds}`,
+    caffeinationInfo
   );
 }

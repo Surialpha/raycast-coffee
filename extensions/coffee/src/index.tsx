@@ -1,109 +1,145 @@
-import { Color, LaunchProps, MenuBarExtra, getPreferenceValues, showHUD } from "@raycast/api";
+import { Color, LaunchProps, MenuBarExtra, getPreferenceValues, showHUD, Icon, launchCommand, LaunchType } from "@raycast/api";
 import { useExec } from "@raycast/utils";
 import { useEffect, useState } from "react";
-import { formatDuration, startCaffeinate, stopCaffeinate } from "./utils";
+import { formatDuration, startCaffeinate, stopCaffeinate, isCaffeinated, getCaffeinationInfo, type CaffeinationInfo } from "./utils";
 
-function parseEtime(etime: string): number {
-  const parts = etime.split(":").reverse();
-  const seconds = parseInt(parts[0]) || 0;
-  const minutes = parseInt(parts[1]) || 0;
+const iconMap: Record<string, { caffeinated: string; decaffeinated: string }> = {
+  pot: { caffeinated: "☕", decaffeinated: "🫖" },
+  mug: { caffeinated: "☕", decaffeinated: "🍵" },
+  cup: { caffeinated: "☕", decaffeinated: "🥤" },
+  "paper-cup": { caffeinated: "☕", decaffeinated: "🥛" },
+};
 
-  let hours = parts[2] ? parseInt(parts[2]) : 0;
-  let days = 0;
-
-  if (parts[2] && parts[2].includes("-")) {
-    const dayHour = parts[2].split("-");
-    days = parseInt(dayHour[0]) || 0;
-    hours = parseInt(dayHour[1]) || 0;
+function formatTimeRemaining(endTime: number): string {
+  const now = Date.now();
+  const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+  
+  if (remaining === 0) return "ending soon";
+  
+  const hours = Math.floor(remaining / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`;
+  } else if (minutes > 0) {
+    return `${minutes}m remaining`;
+  } else {
+    return `${remaining}s remaining`;
   }
-
-  return seconds + minutes * 60 + hours * 3600 + days * 86400;
 }
 
-function useExtraInfoStr(): string | null {
-  const { data } = useExec("ps -o etime,args= -p $(pgrep caffeinate)", [], {
-    shell: true,
-    parseOutput: (output) => output.stdout,
-  });
+function formatEndTime(endTime: number): string {
+  const date = new Date(endTime);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const displayHours = hours % 12 || 12;
+  const period = hours >= 12 ? "PM" : "AM";
+  return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+}
 
-  if (!data) {
-    // caffeinate not running
-    return null;
+function getCaffeinationStatusText(info: CaffeinationInfo | null): string {
+  if (!info) return "Caffeinated ☕";
+  
+  switch (info.type) {
+    case "manual":
+      return "Caffeinated ☕";
+    case "timed":
+      return info.endTime ? `Until ${formatTimeRemaining(info.endTime)}` : "Timed ☕";
+    case "until":
+      return info.endTime ? `Until ${formatEndTime(info.endTime)}` : "Scheduled ☕";
+    case "while":
+      return info.appName ? `While ${info.appName} runs` : "App-based ☕";
+    case "scheduled":
+      return "Scheduled ☕";
+    default:
+      return "Caffeinated ☕";
   }
-
-  const lines = data.trim().split("\n");
-  const [etime, ...cmdArgs] = lines[lines.length - 1].trim().split(/\s+/);
-
-  const secondsRunning = parseEtime(etime);
-
-  const timeoutMatch = cmdArgs.join(" ").match(/-t (\d+)/);
-  if (timeoutMatch) {
-    const secondsRemain = parseInt(timeoutMatch[1]) - secondsRunning;
-
-    return `${formatDuration(secondsRemain)} remain`;
-  }
-
-  return null;
 }
 
 export default function Command(props: LaunchProps) {
   const hasLaunchContext = props.launchContext?.caffeinated !== undefined;
-
-  const { isLoading, data, mutate } = useExec("pgrep caffeinate", [], {
-    shell: true,
-    execute: !hasLaunchContext,
-    parseOutput: (output) => output.stdout.length > 0,
-  });
-
-  const caffeinateStatus = hasLaunchContext ? props?.launchContext?.caffeinated : data;
-  const caffeinateLoader = hasLaunchContext ? false : isLoading;
   const preferences = getPreferenceValues<Preferences.Index>();
 
-  const extraInfoStr = useExtraInfoStr();
-
-  const [localCaffeinateStatus, setLocalCaffeinateStatus] = useState(caffeinateStatus);
+  const [caffeinated, setCaffeinated] = useState(hasLaunchContext ? props.launchContext.caffeinated : false);
+  const [caffeinationInfo, setCaffeinationInfo] = useState<CaffeinationInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(!hasLaunchContext);
 
   useEffect(() => {
-    setLocalCaffeinateStatus(caffeinateStatus);
-  }, [caffeinateStatus]);
+    checkStatus();
+    const interval = setInterval(checkStatus, 2000); // Update every 2 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  async function checkStatus() {
+    const status = await isCaffeinated();
+    const info = await getCaffeinationInfo();
+    
+    setCaffeinated(status);
+    setCaffeinationInfo(info);
+    setIsLoading(false);
+  }
 
   const handleCaffeinateStatus = async () => {
-    if (localCaffeinateStatus) {
-      setLocalCaffeinateStatus(false);
-      await mutate(stopCaffeinate({ menubar: true, status: true }), {
-        optimisticUpdate: () => false,
-      });
+    if (caffeinated) {
+      await stopCaffeinate({ menubar: true, status: true });
       if (preferences.hidenWhenDecaffeinated) {
-        showHUD("Your Mac is now decaffeinated");
+        showHUD("💤 Your computer is now decaffeinated");
       }
     } else {
-      setLocalCaffeinateStatus(true);
-      await mutate(startCaffeinate({ menubar: true, status: true }), {
-        optimisticUpdate: () => true,
-      });
+      await startCaffeinate({ menubar: true, status: true });
     }
+    await checkStatus();
   };
 
-  if (preferences.hidenWhenDecaffeinated && !localCaffeinateStatus && !isLoading) {
+  if (preferences.hidenWhenDecaffeinated && !caffeinated && !isLoading) {
     return null;
   }
 
+  const selectedIcon = iconMap[preferences.icon] || iconMap.pot;
+  const icon = caffeinated ? selectedIcon.caffeinated : selectedIcon.decaffeinated;
+  const statusText = caffeinated ? getCaffeinationStatusText(caffeinationInfo) : "Decaffeinated 💤";
+
   return (
     <MenuBarExtra
-      isLoading={caffeinateLoader}
-      icon={
-        localCaffeinateStatus
-          ? { source: `${preferences.icon}-filled.svg`, tintColor: Color.PrimaryText }
-          : { source: `${preferences.icon}-empty.svg`, tintColor: Color.PrimaryText }
-      }
+      isLoading={isLoading}
+      icon={icon}
+      tooltip={statusText}
     >
-      {isLoading ? null : (
+      {!isLoading && (
         <>
-          <MenuBarExtra.Section title={`Your mac is ${localCaffeinateStatus ? "caffeinated" : "decaffeinated"}`} />
-          {localCaffeinateStatus && extraInfoStr && <MenuBarExtra.Section title={extraInfoStr} />}
           <MenuBarExtra.Item
-            title={localCaffeinateStatus ? "Decaffeinate" : "Caffeinate"}
+            title={statusText}
+            icon={caffeinated ? Icon.CheckCircle : Icon.Circle}
+          />
+          {caffeinationInfo && caffeinationInfo.endTime && (
+            <MenuBarExtra.Item
+              title={`Ends: ${formatEndTime(caffeinationInfo.endTime)}`}
+              subtitle={formatTimeRemaining(caffeinationInfo.endTime)}
+            />
+          )}
+          {caffeinationInfo && caffeinationInfo.appName && (
+            <MenuBarExtra.Item
+              title={`Watching: ${caffeinationInfo.appName}`}
+              icon={Icon.AppWindow}
+            />
+          )}
+          <MenuBarExtra.Separator />
+          <MenuBarExtra.Item
+            title={caffeinated ? "Decaffeinate" : "Caffeinate"}
             onAction={handleCaffeinateStatus}
+            icon={Icon.Power}
+          />
+          <MenuBarExtra.Item
+            title="Caffeinate While..."
+            onAction={() => launchCommand({ name: "caffeinateWhile", type: LaunchType.UserInitiated })}
+            icon={Icon.AppWindow}
+          />
+          <MenuBarExtra.Separator />
+          <MenuBarExtra.Item
+            title="Refresh"
+            onAction={checkStatus}
+            icon={Icon.ArrowClockwise}
+            shortcut={{ modifiers: ["cmd"], key: "r" }}
           />
         </>
       )}

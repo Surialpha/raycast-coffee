@@ -9,7 +9,7 @@ type Input = {
 };
 
 /**
- * Prevents your Mac from sleeping while a specific application is running
+ * Prevents your computer from sleeping while a specific application is running
  */
 export default async function (input: Input) {
   const { application } = input;
@@ -25,7 +25,7 @@ export default async function (input: Input) {
 
   await startCaffeinate({ menubar: true, status: true }, undefined, `-w ${processId}`);
 
-  return `Mac will stay awake while ${application} is running`;
+  return `Computer will stay awake while ${application} is running`;
 }
 
 async function getRunningProcesses(): Promise<Record<string, string>> {

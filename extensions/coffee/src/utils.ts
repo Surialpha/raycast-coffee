@@ -1,10 +1,19 @@
-import { getPreferenceValues, launchCommand, LaunchType, LocalStorage, showHUD } from "@raycast/api";
-import { exec, execSync } from "node:child_process";
+/**
+ * Cross-Platform Coffee Extension Utils
+ * 
+ * Automatically detects the operating system and uses the appropriate implementation:
+ * - Windows: Uses PowerShell + SetThreadExecutionState API
+ * - macOS: Uses native caffeinate command
+ */
 
+import { LocalStorage, showHUD } from "@raycast/api";
+import * as os from "os";
+
+// Type definitions
 type Preferences = {
   preventDisplay: boolean;
-  preventDisk: boolean;
   preventSystem: boolean;
+  preventDisk?: boolean;
   icon: string;
 };
 
@@ -21,130 +30,46 @@ export interface Schedule {
   IsRunning: boolean;
 }
 
-export async function startCaffeinate(updates: Updates, hudMessage?: string, additionalArgs?: string) {
-  if (hudMessage) {
-    await showHUD(hudMessage);
-  }
-  await stopCaffeinate({ menubar: false, status: false });
-  exec(`/usr/bin/caffeinate ${generateArgs(additionalArgs)} || true`);
-  await update(updates, true);
+// Detect operating system
+const platform = os.platform();
+const isWindows = platform === "win32";
+const isMacOS = platform === "darwin";
+
+// Import the appropriate implementation based on OS
+let platformUtils: any;
+
+if (isWindows) {
+  console.log("[Coffee] Running on Windows - using PowerShell API");
+  platformUtils = require("./utils-windows");
+} else if (isMacOS) {
+  console.log("[Coffee] Running on macOS - using caffeinate");
+  platformUtils = require("./utils-macos");
+} else {
+  throw new Error(`Unsupported operating system: ${platform}. Coffee only supports Windows and macOS.`);
 }
 
-export async function stopCaffeinate(updates: Updates, hudMessage?: string) {
-  if (hudMessage) {
-    await showHUD(hudMessage);
-  }
-  execSync("/usr/bin/killall caffeinate || true");
-  await update(updates, false);
-}
+// Re-export all functions from the platform-specific implementation
+export const startCaffeinate = platformUtils.startCaffeinate;
+export const stopCaffeinate = platformUtils.stopCaffeinate;
+export const isCaffeinated = platformUtils.isCaffeinated;
+export const numberToDayString = platformUtils.numberToDayString;
+export const getSchedule = platformUtils.getSchedule;
+export const changeScheduleState = platformUtils.changeScheduleState;
+export const isTodaysSchedule = platformUtils.isTodaysSchedule;
+export const isNotTodaysSchedule = platformUtils.isNotTodaysSchedule;
+export const formatDuration = platformUtils.formatDuration;
+export const getCaffeinationInfo = platformUtils.getCaffeinationInfo;
 
-async function update(updates: Updates, caffeinated: boolean) {
-  if (updates.menubar) {
-    await tryLaunchCommand("index", { caffeinated });
-  }
-  if (updates.status) {
-    await tryLaunchCommand("status", { caffeinated });
-  }
-}
+// Re-export types
+export type { Schedule, CaffeinationInfo } from "./utils-windows";
 
-async function tryLaunchCommand(commandName: string, context: { caffeinated: boolean }) {
-  try {
-    await launchCommand({ name: commandName, type: LaunchType.Background, context });
-  } catch (error) {
-    // Handle error if command is not enabled
-  }
-}
+// Export platform information for debugging
+export const getPlatformInfo = () => ({
+  platform,
+  isWindows,
+  isMacOS,
+  implementation: isWindows ? "Windows PowerShell" : isMacOS ? "macOS caffeinate" : "Unknown",
+});
 
-function generateArgs(additionalArgs?: string) {
-  const preferences = getPreferenceValues<Preferences>();
-  const args = [];
-
-  if (preferences.preventDisplay) args.push("d");
-  if (preferences.preventDisk) args.push("m");
-  if (preferences.preventSystem) args.push("i");
-  if (additionalArgs) args.push(` ${additionalArgs}`);
-
-  return args.length > 0 ? `-${args.join("")}` : "";
-}
-
-export function numberToDayString(dayIndex: number): string {
-  const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  return daysOfWeek[dayIndex];
-}
-
-export async function getSchedule() {
-  const currentDate = new Date();
-  const currentDayString = numberToDayString(currentDate.getDay()).toLowerCase();
-
-  const getSchedule: string | undefined = await LocalStorage.getItem(currentDayString);
-  if (getSchedule === undefined) return undefined;
-
-  const schedule: Schedule = JSON.parse(getSchedule);
-  return schedule;
-}
-
-export async function changeScheduleState(operation: string, schedule: Schedule) {
-  switch (operation) {
-    case "caffeinate": {
-      schedule.IsManuallyDecafed = false;
-      schedule.IsRunning = false;
-      await LocalStorage.setItem(schedule.day, JSON.stringify(schedule));
-      break;
-    }
-    case "decaffeinate": {
-      if (schedule.IsRunning === true || isNotTodaysSchedule(schedule)) {
-        schedule.IsManuallyDecafed = true;
-        schedule.IsRunning = false;
-        await LocalStorage.setItem(schedule.day, JSON.stringify(schedule));
-      }
-      break;
-    }
-
-    default:
-      break;
-  }
-}
-
-export function isTodaysSchedule(schedule: Schedule) {
-  const currentDate = new Date();
-  const currentDayString = numberToDayString(currentDate.getDay()).toLowerCase();
-
-  if (schedule.day === currentDayString) return true;
-  else return false;
-}
-
-export function isNotTodaysSchedule(schedule: Schedule) {
-  const currentDate = new Date();
-  const currentDayString = numberToDayString(currentDate.getDay()).toLowerCase();
-
-  if (schedule.day === currentDayString) return false;
-  else return true;
-}
-
-/*
-Example usage:
-console.log(formatDuration(1337000)); // Output: "15d 11h 23m 20s"
-console.log(formatDuration(3600));    // Output: "1h"
-console.log(formatDuration(65));      // Output: "1m 5s"
-console.log(formatDuration(86400));   // Output: "1d"
-*/
-export function formatDuration(seconds: number): string {
-  const units = [
-    { label: "d", value: 86400 },
-    { label: "h", value: 3600 },
-    { label: "m", value: 60 },
-    { label: "s", value: 1 },
-  ];
-
-  const result: string[] = [];
-
-  for (const unit of units) {
-    const amount = Math.floor(seconds / unit.value);
-    seconds %= unit.value;
-    if (amount > 0) {
-      result.push(`${amount}${unit.label}`);
-    }
-  }
-
-  return result.join(" ");
-}
+// Show platform info on first load
+console.log(`[Coffee] Platform: ${platform}, Implementation: ${getPlatformInfo().implementation}`);

@@ -1,5 +1,14 @@
 # Coffee Changelog
 
+## [Cross-Platform Support] - 2026-01-20
+
+- Added Windows support using PowerShell and SetThreadExecutionState API
+- Implemented platform detection to automatically use appropriate commands (caffeinate for macOS, powercfg for Windows)
+- Enhanced toast messages with emojis for better user feedback
+- Updated all references from "Mac" to "computer" for cross-platform compatibility
+- Created platform-specific utility modules (utils-macos.ts, utils-windows.ts)
+- Maintained backward compatibility with all existing macOS features
+
 ## [✨ AI Enhancements] - 2025-02-21
 
 ## [Enhancement] - 2025-03-01
@@ -61,7 +70,7 @@
 
 ## [Fix] - 2023-01-19
 
-Fixed a bug that caused the extension to crash if the menubar command was not enabled.
+- Fixed a bug that caused the extension to crash if the menubar command was not enabled.
 
 ## [Update] - 2022-12-09
 

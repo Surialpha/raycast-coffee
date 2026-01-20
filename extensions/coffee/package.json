@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "coffee",
   "title": "Coffee",
-  "description": "Prevent the sleep function on your mac",
+  "description": "Prevent your computer from sleeping (macOS & Windows)",
   "icon": "logo.png",
   "author": "mooxl",
   "contributors": [
@@ -13,6 +13,7 @@
     "xilopaint",
     "ridemountainpig",
     "zakj",
+    "surialpha",
     "Visual-Studio-Coder"
   ],
   "license": "MIT",
@@ -21,7 +22,7 @@
       "name": "caffeinate",
       "title": "Caffeinate",
       "subtitle": "Coffee",
-      "description": "Prevent your Mac from sleeping",
+      "description": "Prevent your computer from sleeping",
       "mode": "no-view"
     },
     {
@@ -35,7 +36,7 @@
       "name": "caffeinateWhile",
       "title": "Caffeinate While",
       "subtitle": "Coffee",
-      "description": "Prevent your Mac from sleeping while an certain app is running",
+      "description": "Prevent your computer from sleeping while a certain app is running",
       "mode": "view"
     },
     {
@@ -46,6 +47,32 @@
       "mode": "menu-bar",
       "interval": "1m",
       "preferences": [
+        {
+          "name": "icon",
+          "title": "Menu Bar Icon Style",
+          "description": "Choose the icon style for the menu bar",
+          "type": "dropdown",
+          "required": false,
+          "default": "pot",
+          "data": [
+            {
+              "title": "Coffee Pot (☕/🫖)",
+              "value": "pot"
+            },
+            {
+              "title": "Coffee Mug (☕/🍵)",
+              "value": "mug"
+            },
+            {
+              "title": "Coffee Cup (☕/🥤)",
+              "value": "cup"
+            },
+            {
+              "title": "Paper Cup (☕/🥛)",
+              "value": "paper-cup"
+            }
+          ]
+        },
         {
           "name": "hidenWhenDecaffeinated",
           "description": "Hide the icon when decaffeinated",
@@ -68,7 +95,7 @@
       "name": "caffeinateFor",
       "title": "Caffeinate For",
       "subtitle": "Coffee",
-      "description": "Prevent your Mac from sleeping for a certain time",
+      "description": "Prevent your computer from sleeping for a certain time",
       "mode": "no-view",
       "arguments": [
         {
@@ -95,7 +122,7 @@
       "name": "caffeinateUntil",
       "title": "Caffeinate Until",
       "subtitle": "Coffee",
-      "description": "Prevent your Mac from sleeping until a certain time",
+      "description": "Prevent your computer from sleeping until a certain time",
       "mode": "no-view",
       "arguments": [
         {
@@ -124,22 +151,22 @@
     {
       "name": "caffeinate-for",
       "title": "Caffeinate for Duration",
-      "description": "Keeps your Mac awake for a specified duration"
+      "description": "Keeps your computer awake for a specified duration"
     },
     {
       "name": "caffeinate",
       "title": "Caffeinate",
-      "description": "Keep Mac awake for unspecified duration."
+      "description": "Keep computer awake for unspecified duration"
     },
     {
       "name": "check-caffeination-status",
       "title": "Check Caffeination Status",
-      "description": "Check if your Mac is currently caffeinated or not."
+      "description": "Check if your computer is currently caffeinated or not"
     },
     {
       "name": "decaffeinate",
       "title": "Decaffeinate",
-      "description": "Turn off your Mac's sleep prevention."
+      "description": "Turn off sleep prevention"
     },
     {
       "name": "schedule-caffeination",
@@ -228,7 +255,7 @@
     "instructions": "Before running any tool, always run check-caffeination-status before to check the status",
     "evals": [
       {
-        "input": "@coffee keep my mac awake for 2 hours",
+        "input": "@coffee keep my computer awake for 2 hours",
         "mocks": {
           "check-caffeination-status": {
             "isCaffeinated": false,
@@ -248,7 +275,7 @@
             }
           },
           {
-            "meetsCriteria": "Confirms the duration Mac will stay awake"
+            "meetsCriteria": "Confirms the duration computer will stay awake"
           }
         ]
       },
@@ -280,12 +307,12 @@
             }
           },
           {
-            "meetsCriteria": "Confirms that Mac will stay awake while Zoom is running"
+            "meetsCriteria": "Confirms that computer will stay awake while Zoom is running"
           }
         ]
       },
       {
-        "input": "@coffee stop keeping my mac awake",
+        "input": "@coffee stop keeping my computer awake",
         "mocks": {
           "check-caffeination-status": {
             "isCaffeinated": true,
@@ -308,7 +335,7 @@
         ]
       },
       {
-        "input": "@coffee is my mac preventing sleep?",
+        "input": "@coffee is my computer preventing sleep?",
         "mocks": {
           "check-caffeination-status": {
             "isCaffeinated": true,
@@ -320,7 +347,7 @@
             "callsTool": "check-caffeination-status"
           },
           {
-            "meetsCriteria": "Clearly states whether the Mac is currently caffeinated or not"
+            "meetsCriteria": "Clearly states whether the computer is currently caffeinated or not"
           }
         ]
       },
@@ -359,7 +386,7 @@
         ]
       },
       {
-        "input": "@coffee prevent my mac from sleeping",
+        "input": "@coffee prevent my computer from sleeping",
         "mocks": {
           "check-caffeination-status": {
             "isCaffeinated": false,
@@ -377,7 +404,7 @@
             "callsTool": "caffeinate"
           },
           {
-            "meetsCriteria": "Confirms that Mac will stay awake"
+            "meetsCriteria": "Confirms that computer will stay awake"
           }
         ]
       }

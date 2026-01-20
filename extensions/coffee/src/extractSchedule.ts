@@ -16,7 +16,7 @@ export async function extractSchedule(text: string): Promise<ParsedSchedule | nu
 
   // Ensure that both fromTime and toTime are present
   if (!times || times.length < 2) {
-    await showToast(Toast.Style.Failure, "Oops! Please specify both 'from' and 'to' times in HH:MM format.");
+    await showToast(Toast.Style.Failure, "⏰ Oops! Please specify both 'from' and 'to' times in HH:MM format");
     return null;
   }
 
@@ -28,7 +28,7 @@ export async function extractSchedule(text: string): Promise<ParsedSchedule | nu
   // Handle the "except" case
   if (inputText.includes("except")) {
     if (mentionedDays.length === 0) {
-      await showToast(Toast.Style.Failure, "Oops! Please mention the days to be excluded.");
+      await showToast(Toast.Style.Failure, "📅 Oops! Please mention the days to be excluded");
       return null;
     }
     const allDaysExcept = daysOfWeek.filter((day) => !mentionedDays.includes(day));

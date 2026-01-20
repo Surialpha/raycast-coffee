@@ -3,7 +3,9 @@
   <h1 align="center">Coffee Extension</h1>
 </p>
 
-**Coffee** is a Raycast extension designed to manage the caffeination of your Mac. Whether you want to keep your Mac awake for a specific period, while a particular app is running, or on a schedule, Coffee has you covered.
+**Coffee** is a cross-platform Raycast extension designed to prevent your computer from sleeping. Whether you want to keep your system awake for a specific period, while a particular app is running, or on a schedule, Coffee has you covered.
+
+Works on **macOS** and **Windows**.
 
 ## Installation 🛠️
 
@@ -25,23 +27,19 @@ Once installed, simply trigger the Raycast command palette and search for the de
 
 ### 1. **Caffeinate/Decaffeinate**
 
-Keep your Mac awake indefinitely or cancel the caffeination.
+Keep your computer awake indefinitely or cancel the caffeination.
 
 ### 2. **Toggle Caffeination**
 
-Toggle between keeping your Mac caffeinated and in a decaffeinated state
+Toggle between keeping your computer caffeinated and in a decaffeinated state.
 
 ### 3. **Caffeinate For**
 
-Caffeinate your Mac for a specified amount of time.
-
-<p align="center">
-  <img src="./metadata/coffee-2.png" alt="Caffeinate For Command">
-</p>
+Caffeinate your computer for a specified amount of time.
 
 ### 4. **Caffeinate While**
 
-Keep your Mac awake as long as a specific app is running.
+Keep your computer awake as long as a specific app is running.
 
 <p align="center">
   <img src="./metadata/coffee-3.png" alt="Caffeinate While Command">
