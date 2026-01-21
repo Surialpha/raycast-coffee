@@ -30,6 +30,16 @@ export interface Schedule {
   IsRunning: boolean;
 }
 
+export interface CaffeinationInfo {
+  type: "manual" | "timed" | "until" | "while" | "scheduled";
+  startTime: number;
+  endTime?: number;
+  duration?: number;
+  appName?: string;
+  pid?: number;
+  appPid?: string;
+}
+
 // Detect operating system
 const platform = os.platform();
 const isWindows = platform === "win32";
@@ -59,9 +69,8 @@ export const isTodaysSchedule = platformUtils.isTodaysSchedule;
 export const isNotTodaysSchedule = platformUtils.isNotTodaysSchedule;
 export const formatDuration = platformUtils.formatDuration;
 export const getCaffeinationInfo = platformUtils.getCaffeinationInfo;
-
-// Re-export types
-export type { Schedule, CaffeinationInfo } from "./utils-windows";
+export const getRunningApplications = platformUtils.getRunningApplications;
+export const caffeinateWhileAppRunning = platformUtils.caffeinateWhileAppRunning;
 
 // Export platform information for debugging
 export const getPlatformInfo = () => ({

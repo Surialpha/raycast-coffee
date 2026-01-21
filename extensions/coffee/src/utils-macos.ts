@@ -192,3 +192,41 @@ export async function getCaffeinationInfo(): Promise<CaffeinationInfo | null> {
     return null;
   }
 }
+
+// Get list of running applications (macOS-specific using AppleScript)
+export async function getRunningApplications(): Promise<Array<{ name: string; pid: number }>> {
+  try {
+    const { runAppleScript } = await import("@raycast/utils");
+    const ids = (
+      await runAppleScript(
+        `tell application "System Events" to get the unix id of every process whose background only is false`,
+      )
+    ).split(", ");
+    const names = (
+      await runAppleScript(
+        `tell application "System Events" to get the name of every process whose background only is false`,
+      )
+    ).split(", ");
+    
+    return names.map((name, index) => ({ 
+      name, 
+      pid: parseInt(ids[index]) 
+    }));
+  } catch (error) {
+    console.error("Failed to get running applications:", error);
+    return [];
+  }
+}
+
+// Monitor an application and stop caffeination when it exits (macOS-specific)
+export async function caffeinateWhileAppRunning(appName: string, pid: number, updates: Updates) {
+  const caffeinationInfo: CaffeinationInfo = {
+    type: "while",
+    startTime: Date.now(),
+    appName: appName,
+    pid: pid
+  };
+  
+  // Start caffeination with -w (wait for process) flag
+  await startCaffeinate(updates, `☕ Keeping awake while ${appName} runs`, `-w ${pid}`, caffeinationInfo);
+}

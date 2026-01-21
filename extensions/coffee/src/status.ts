@@ -1,15 +1,5 @@
 import { LocalStorage, updateCommandMetadata } from "@raycast/api";
-import { Schedule, startCaffeinate, getSchedule, stopCaffeinate } from "./utils";
-import { execSync } from "node:child_process";
-
-function isCaffeinateRunning(): boolean {
-  try {
-    execSync("pgrep caffeinate");
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { Schedule, startCaffeinate, getSchedule, stopCaffeinate, isCaffeinated } from "./utils";
 
 async function handleScheduledCaffeinate(schedule: Schedule): Promise<boolean> {
   if (!schedule || Object.keys(schedule).length === 0) {
@@ -37,7 +27,12 @@ async function handleScheduledCaffeinate(schedule: Schedule): Promise<boolean> {
   // If the current time is within scheduled time, start caffeination
   if (isWithinSchedule === true && schedule.IsRunning === false) {
     const duration = (endHour - startHour) * 3600 + (endMinute - startMinute) * 60;
-    await startCaffeinate({ menubar: true, status: true }, undefined, `-t ${duration}`);
+    const caffeinationInfo = {
+      type: "scheduled" as const,
+      startTime: Date.now(),
+      endTime: Date.now() + duration * 1000
+    };
+    await startCaffeinate({ menubar: true, status: true }, undefined, duration, caffeinationInfo);
     schedule.IsRunning = true;
     await LocalStorage.setItem(schedule.day, JSON.stringify(schedule));
     return true;
@@ -61,12 +56,12 @@ export async function checkSchedule() {
 }
 
 export default async function Command() {
-  const isCaffeinated = isCaffeinateRunning();
+  const caffeinated = await isCaffeinated();
   const isScheduled = await checkSchedule();
 
   let subtitle = "✖ Decaffeinated";
 
-  if (isCaffeinated) {
+  if (caffeinated) {
     subtitle = "✔ Caffeinated";
   } else if (isScheduled) {
     subtitle = "✔ Caffeinated";

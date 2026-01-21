@@ -60,7 +60,7 @@ export default function Command(props: LaunchProps) {
   const hasLaunchContext = props.launchContext?.caffeinated !== undefined;
   const preferences = getPreferenceValues<Preferences.Index>();
 
-  const [caffeinated, setCaffeinated] = useState(hasLaunchContext ? props.launchContext.caffeinated : false);
+  const [caffeinated, setCaffeinated] = useState(hasLaunchContext ? props.launchContext?.caffeinated ?? false : false);
   const [caffeinationInfo, setCaffeinationInfo] = useState<CaffeinationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(!hasLaunchContext);
 
