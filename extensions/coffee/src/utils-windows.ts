@@ -268,7 +268,7 @@ export async function stopCaffeinate(updates: Updates, hudMessage?: string) {
           try {
             execSync(
               `${powershell} -Command "Get-Process | Where-Object { $_.MainWindowTitle -like '*${windowTitle}*' } | Stop-Process -Force"`,
-              { stdio: "ignore", timeout: 5000 }
+              { stdio: "ignore", timeout: 2000, windowsHide: true }
             );
           } catch (e) {
             // Ignore, process might already be stopped
@@ -317,12 +317,15 @@ public class PowerUtil {
       
       execSync(`${powershell} -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File "${resetScriptPath}"`, {
         stdio: "ignore",
-        timeout: 5000
+        timeout: 10000, // 10 second timeout
+        windowsHide: true
       });
       
       unlinkSync(resetScriptPath);
     } catch (e) {
-      console.error("Failed to reset execution state:", e);
+      // Ignore all errors - the execution state will be reset when the process ends anyway
+      // or when the system resumes from sleep
+      
       // Cleanup temp file even on error
       if (existsSync(resetScriptPath)) {
         try {

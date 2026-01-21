@@ -161,3 +161,29 @@ MIT (unchanged)
 ## Previous Versions
 
 See original repository at https://github.com/raycast/extensions/tree/main/extensions/coffee for earlier version history.
+
+17:01:54 Failed to reset execution state: <ref *1> Error: spawnSync cmd.exe ETIMEDOUT
+    at Object.spawnSync (node:internal/child_process:1120:20)
+    at spawnSync (node:child_process:901:24)
+    at execSync (node:child_process:982:15)
+    at stopCaffeinate (C:\Users\test\.config\raycast-x\extensions\coffee\caffeinate.js:264:46)
+    at async startCaffeinate (C:\Users\test\.config\raycast-x\extensions\coffee\caffeinate.js:109:3)
+    at async caffeinate_default (C:\Users\test\.config\raycast-x\extensions\coffee\caffeinate.js:8203:3) {
+  errno: -4039,
+  code: 'ETIMEDOUT',
+  syscall: 'spawnSync cmd.exe',
+  path: 'cmd.exe',
+  spawnargs: [
+    '/d',
+    '/s',
+    '/c',
+    '"powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File "C:\\Users\\test\\AppData\\Local\\Temp\\raycast-coffee-reset-99076160-4b29-44cb-9da4-016e445164d0.ps1""'
+  ],
+  error: [Circular *1],
+  status: null,
+  signal: 'SIGTERM',
+  output: [ null, null, null ],
+  pid: 9844,
+  stdout: null,
+  stderr: null
+}
